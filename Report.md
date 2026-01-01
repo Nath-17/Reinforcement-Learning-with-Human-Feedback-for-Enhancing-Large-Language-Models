@@ -76,6 +76,24 @@ Causal Transformers rely on a decoder-only architecture and generate sequences i
 
 ## 3. Training a Reward Model
 
+To align the language model with human preferences, we trained a Reward Model on the Stanford Human Preferences (SHP) dataset. This model learns to assign higher scores to responses that humans prefer over alternative responses. The Reward Model is a pre-trained GPT-2 model augmented with a scalar value head, allowing it to output a single reward per sequence. This approach is a key component of the Reinforcement Learning with Human Feedback (RLHF) pipeline, providing a supervised signal to guide subsequent policy optimization.
+
+For this experiment, we selected examples from three subreddits to cover diverse domains:
+
+| Subreddit | #Train | #Validation | #Test | Total |
+|-----------|--------|------------|-------|-------|
+| explainlikeimfive | 19,592 | 1,014 | 1,070 | 21,676 |
+| askscience | 13,316 | 899 | 977 | 15,192 |
+| askphilosophy | 10,307 | 608 | 677 | 11,592 |
+
+Dataset preprocessing included:
+**Generating paired examples** `(chosen, rejected)` using the `labels` field.  
+**Tokenization** with the GPT-2 tokenizer, combining the prompt and response for both chosen and rejected sequences.  
+**Padding and truncation** to a maximum of 512 tokens for GPU efficiency.
+
+This process resulted in a **training dataset of ~48k examples** and a small validation subset (~500 examples) for monitoring.
+
+
 ## 4. Optimization with Proximal Policy Optimization (PPO)
 
 ## Conclusion

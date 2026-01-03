@@ -74,27 +74,43 @@ Causal Transformers rely on a decoder-only architecture and generate sequences i
 
 ## 2. Implementing the RLHF Pipeline
 
+This project implements Reinforcement Learning from Human Feedback (RLHF) to fine-tune a GPT-2 model on the Stanford ELI5 dataset. The objective is to align the model’s responses with human preferences for simplicity, and accuracy. The pipeline consists of a preprocessing of the dataset step and two main stages: training a Reward Model to act as human judgment, and optimizing the base LLM using Proximal Policy Optimization.
+
+**Data preparation** 
+
+The raw dataset from _Stanfordnlp_ is not  binarized. It contains a question (the "history" or "prompt") and a list of multiple human answers, each with a specific score based on community upvotes. Firstly, we transformed these answers into pairs. For every question, we selected a "chosen" answer (higher score) and a "rejected" answer (lower score).
+
+Secondly, we formatted the data into a structure compatible with the Hugging Face _RewardTrainer_. Through this tokenization process, the dataset was transformed into the columns _input_ids_chosen_/_attention_mask_chosen_ for the preferred responses and _input_ids_rejected_ _attention_mask_rejected_ for the non-preferred alternatives.
+
+Finally, to manage computational limitations and ensure stable training on GPT-2, we implemented a filtering process: 
+- Token Limit: We removed any responses exceeding 256 tokens. This prevents Out-of-Memory errors. There was 13,123 samples under 256 tokens.
+- Subsampling for Efficiency: To optimize training time while maintaining a valid  pipeline, we utilized the following subsets:
+  - Reward Model: 1,000 training pairs | 200 evaluation pairs.
+  - PPO Optimization: 1,000 training prompts | 200 evaluation prompts.
+
+
 ## 3. Training a Reward Model
 
-To align the language model with human preferences, we trained a Reward Model on the Stanford Human Preferences (SHP) dataset. This model learns to assign higher scores to responses that humans prefer over alternative responses. The Reward Model is a pre-trained GPT-2 model augmented with a scalar value head, allowing it to output a single reward per sequence. This approach is a key component of the Reinforcement Learning with Human Feedback (RLHF) pipeline, providing a supervised signal to guide subsequent policy optimization.
+To align the language model with human preferences, we trained a Reward Model on the Stanford Human Preferences dataset. This model learns to assign higher scores to responses that humans prefer over alternative responses. The Reward Model a pre-trained GPT-2 that is transformed from a text generator into a regression model
 
-For this experiment, we selected examples from three subreddits to cover diverse domains:
+The Reward Model provides the feedback the model needs to improve during the PPO phase. The fianl model uses these scores to learn which answers are better suited for moving from generic responses to preferred ones.
 
-| Subreddit | #Train | #Validation | #Test | Total |
-|-----------|--------|------------|-------|-------|
-| explainlikeimfive | 19,592 | 1,014 | 1,070 | 21,676 |
-| askscience | 13,316 | 899 | 977 | 15,192 |
-| askphilosophy | 10,307 | 608 | 677 | 11,592 |
+**Results**
 
-Dataset preprocessing included:
-**Generating paired examples** `(chosen, rejected)` using the `labels` field.  
-**Tokenization** with the GPT-2 tokenizer, combining the prompt and response for both chosen and rejected sequences.  
-**Padding and truncation** to a maximum of 512 tokens for GPU efficiency.
-
-This process resulted in a **training dataset of ~48k examples** and a small validation subset (~500 examples) for monitoring.
+The Training Loss showed a promising downward trend, it dropped from 2.49 at step 50 to 0.52 by step 750. However, the Validation Loss struggled to decrease below 0.71. 
+The model shows an accuracy of 47.00%. 5his indicates the model  fails to differentiate between the chosen and rejected text pairs, the near-random accuracy suggests that a larger training subset (beyond 1,000 samples) and additional epochs may be required to capture the nuances of responses (it was not implemented due to computational resources). 
 
 
 ## 4. Optimization with Proximal Policy Optimization (PPO)
+
+Then, we used our trained Reward Model to fine-tune the GPT-2 policy through reinforcement learning. The goal is to generate better outputs that align with human preferences. In this setup, the Reward Model provides a  score for every response the model produces. By using the PPO (Proximal Policy Optimization) algorithm, we optimized the model to maximize these reward scores.
+
+We began with an initial LLM (GPT-2), that generates responses to prompts in the training dataset, for each response the Reward Model gives a score and we fine-tune the model to align its outputs with human preferences. To prevent generating nonsensical text, PPO applies a KL Divergence penalty, which measures how much the updated policy differs from the original model.
+
+**Results**
+
+
+
 
 ## Conclusion
 

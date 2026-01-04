@@ -56,8 +56,9 @@ The PPO training showed  convergence with a reduction in Value Loss (4.76 to 0.1
 
 PROMPT:    "The best way to learn something new is"
 
-Base Model:  "to create a list of things you will like about yourself. In this example, I am writing my life story and doing it in English instead ("
-RLHF PPO: "to get as much practice in it. You'll find that you will be able to do so by working with your own personal trainer and the ones"
+Base Model:  "...to create a list of things you will like about yourself. In this example, I am writing my life story and doing it in English instead ("
+
+RLHF PPO: "...to get as much practice in it. You'll find that you will be able to do so by working with your own personal trainer and the ones"
 
 We can see a difference here. The Base Model doesn't really answer the question, but the RLHF PPO model gives an actual advice. This shows the Reward Model did its job in making the model's outputs more practical and easier to understand, just like the 'Explain Like I'm Five' style even if there is room for improvements for the second part of the answer. 
 ## Limitations

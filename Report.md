@@ -109,10 +109,42 @@ We began with an initial LLM (GPT-2), that generates responses to prompts in the
 
 **Results**
 
+<ins>KL Divergence:<ins> 
 
+The increase in KL divergence shows that the model moved away from the base weights to adopt the new preferences. Moreover, staying around 2.35 suggests that the model learned new behaviors without collapsing or becoming too incoherent.
+<img src="figures/ppo_train_kl.png" alt="KL results" width="500">
 
+<ins>Scores:<ins> 
+
+The stability of the reward score shows that the PPO process preserved the "quality gains" from the Reward Model while the policy was being optimized. 
+<img src="figures/ppo_train_scores.png" alt="KL results" width="500">
+
+**Generated outputs**
+
+<ins>Example 1:<ins> 
+
+PROMPT: "The best way to learn something new is"
+
+BASE MODEL: "...to create a list of things you will like about yourself. In this example, I am writing my life story"
+
+RLHF PPO: "...to get as much practice in it. You'll find that you will be able to do so by working with your own personal trainer"
+
+The Base Model fails to address the prompt's intent, drifting into an irrelevant narrative about writing a life story. In contrast, the RLHF PPO model identifies the context of the prompt and provides practical content. While the second half of the PPO output remains  generic, it demonstrates a shift based on the "how-to" style on which the Reward Model was trained.
+
+<ins>Example 2:<ins>
+
+PROMPT: "A great way to spend a weekend is"
+
+BASE MODEL: "...to visit the beach, or on one of those popular beaches. The main difference between that and being in Miami Beach for an entire day may not"
+
+RLHF PPO: "...to have some fun with your friends, get on the right side of things and watch TV. That's exactly what we did for this week!"
+
+In this instance, the Base Model starts on the topic but loses coherence at the end. The RLHF PPO model produces a much more natural and human-like response. It frames the answer as a true suggestion and concludes with a complete sentence. This shows that the PPO training helped the model move away from repetitive answers to an "human" style writing from Reddit. 
 
 ## Conclusion
+
+This project demonstrates the implementation of a functional RLHF pipeline by improving a GPT-2 model with human preferences using the ELI5 dataset. The integration of a Reward Model and Proximal Policy Optimization (PPO), we observe a small shift from generic text completion to more contextually relevant outputs. However, the project was constrained by computational limitations, which necessitated restricted sequence lengths and a small training subset of 1,000 samples. These constraints contribute to a Reward Model accuracy that remained low. Future work should focus on scaling the training data and utilizing larger transformer architectures, to enhance the capabilities of the model. 
+
 
 ## References
 
